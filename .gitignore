@@ -1,0 +1,6 @@
+# no need for other gitignore
+libs
+**/.pio
+**/.vscode
+.DS_Store
+libs
