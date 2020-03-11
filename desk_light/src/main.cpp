@@ -1,8 +1,5 @@
 #include <desk.h>
 
-#define TOPIC_LEN 2
-char *COMMAND_TOPIC[2] = {LIGHT_COMMAND_TOPIC, LUX_COMMAND_TOPIC};
-
 boolean light_state = false;
 uint8_t lux = 100;
 uint8_t _lux = lux;
@@ -31,61 +28,57 @@ void update_led() {
 }
 
 void check_button() {
+  mqtt.reset();
   // if button changes status
   if (digitalRead(BUTTON_PIN) != buttonStatus) {
     buttonStatus = digitalRead(BUTTON_PIN);
-    light_state = !light_state;  // switch state
+    // switch state
+    light_state = !light_state;
     // if on set to 255
     if (light_state) lux = 255;
     update_led();
   }
 }
 
+bool decodeJson(String message) {
+  StaticJsonDocument<JSON_BUFFER_SIZE> doc;
+  DeserializationError error = deserializeJson(doc, message);
+  if (error) return false;
+  prettyPrint("json", message);
+  // state topic
+  if (doc.containsKey("state")) light_state = (strcmp(doc["state"], LIGHT_ON) == 0) ? true : false;
+  if (doc.containsKey("brightness")) lux = doc["brightness"].as<int>();
+  return true;
+}
+
 void callback(char *topic, byte *_payload, unsigned int _length) {
-  // handle switch topic
-  if (strcmp(topic, LIGHT_COMMAND_TOPIC) == 0) {
-    String payload = byte_concat(_payload, _length);
-    prettyPrint(LIGHT_COMMAND_TOPIC, payload);
-    light_state = (payload == LIGHT_ON) ? true : false;
-  }
-  // handle brightness topic
-  else if (strcmp(topic, LUX_COMMAND_TOPIC) == 0) {
-    uint8_t brightness = int_byte_concat(_payload, _length);
-    prettyPrint(LUX_COMMAND_TOPIC, brightness);
-    if (brightness < 0 || brightness > 255) return;
-    if (brightness == 0)
-      light_state = false;
-    else
-      lux = brightness;
-  }
+  // handle state topic
+  if (strcmp(topic, COMMAND_TOPIC) == 0) decodeJson(byte_concat(_payload, _length));
   update_led();
 }
 
 void publish_state() {
-  // light state
-  mqtt.publish(LIGHT_STATE_TOPIC, (light_state) ? LIGHT_ON : LIGHT_OFF);
-  // light brightness
-  mqtt.publish(LUX_STATE_TOPIC, lux);
+  StaticJsonDocument<JSON_BUFFER_SIZE> doc;
+  doc["state"] = (light_state) ? LIGHT_ON : LIGHT_OFF;
+  doc["brightness"] = lux;
+
+  int len = measureJson(doc) + 1;
+  char message[len];
+  serializeJson(doc, message, len);
+
+  mqtt.publish(STATE_TOPIC, message);
 }
 
-#pragma region alexa
-Espalexa alexa;
-
 void update_alexa(uint8_t bri) {
-  mqtt.reset();
-  if (bri == 0)
-    light_state = false;
-  else {
-    if (light_state)
-      lux = bri;
-    else
-      light_state = true;
-  }
+  // if does't want to turn off and the light was on
+  lux = (bri != 0 && light_state) ? bri : lux;
+  // if bri == 0 just turn off
+  light_state = (bri == 0) ? false : true;
+
   prettyPrint("alexa/lux", lux);
   prettyPrint("alexa/switch", (light_state) ? "ON" : "OFF");
   update_led();
 }
-#pragma endregion  // alexa
 
 void setup() {
   // safe startup
@@ -100,14 +93,14 @@ void setup() {
   wifi = WiFiUtil(HOSTNAME);
   yield();
   // init the MQTT connection
-  mqtt = MqttUtil(CLIENT_ID, COMMAND_TOPIC, TOPIC_LEN, LIGHT_STATE_TOPIC);
+  mqtt = MqttUtil(CLIENT_ID, COMMAND_TOPIC);
   mqtt.start(callback);
   yield();
   // init alexa
   alexa.addDevice(ALEXA_NAME, update_alexa);
   alexa.begin();
   // end setup
-  analogWrite(LED_PIN, 0);
+  digitalWrite(LED_PIN, LOW);
 }
 
 void loop() {
