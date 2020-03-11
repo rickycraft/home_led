@@ -29,7 +29,7 @@ void MyDHT::read() {
     snprintf(buff, BUFFER_SIZE, "%.1f", t);
     mqtt->publish(TEMP_TOPIC, buff);
     temp = t;  // update last temp
-    prettyPrint("temp ", t, "°C");
+    prettyPrint("temp ", buff);
   }
 
   // if delta humi is grater than threshold publish new value
@@ -37,6 +37,6 @@ void MyDHT::read() {
     snprintf(buff, BUFFER_SIZE, "%.0f", h);
     mqtt->publish(HUMIDITY_TOPIC, buff);
     humi = h;  // update last temp
-    prettyPrint("humidity ", h, "%");
+    prettyPrint("humidity ", buff);
   }
 }
