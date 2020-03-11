@@ -8,7 +8,7 @@
 #define LIGHT_ON "ON"
 #define LIGHT_OFF "OFF"
 #define MQTT_TIMEOUT 10000
-#define MAX_ATTEMPT 2
+#define MAX_ATTEMPT 10
 
 class MqttUtil {
  public:

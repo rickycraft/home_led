@@ -12,9 +12,10 @@
 // VARS
 #define LED_COUNT 60
 #define LED_PIN 4
-#define MAX_SPEED 1000
-#define MIN_SPEED 10000
-#define HA_SPEED 4500
+// bigger is slower
+#define MAX_SPEED 2000
+#define MIN_SPEED 15000
+#define HA_SPEED 8500
 #define ALEXA_NAME "prisma"
 #define HOSTNAME "prism"
 

@@ -19,6 +19,7 @@ uint16_t color = WHITE;                  // current effect speed
 #pragma region ws2812fx
 void setEffect() {
   if (effect_name == "static") effect = FX_MODE_STATIC;
+  if (effect_name == "cycle") effect = FX_MODE_RAINBOW;
   if (effect_name == "rainbow") effect = FX_MODE_RAINBOW_CYCLE;
   if (effect_name == "wipe random") effect = FX_MODE_COLOR_WIPE_RANDOM;
   if (effect_name == "running lights") effect = FX_MODE_RUNNING_LIGHTS;
@@ -32,7 +33,7 @@ void setEffect() {
 
 void update_led() {
   if (light_state) {
-    ws2812fx.start();
+    // ws2812fx.start();
     ws2812fx.setBrightness(lux);
     ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
     // ws2812fx.start();
@@ -67,7 +68,12 @@ void callback(char *topic, byte *_payload, unsigned int _length) {
   if (strcmp(topic, LIGHT_COMMAND_TOPIC) == 0) {
     String payload = byte_concat(_payload, _length);
     prettyPrint(LIGHT_COMMAND_TOPIC, payload);
-    light_state = (payload == LIGHT_ON) ? true : false;
+    if (payload == LIGHT_ON && !light_state) {
+      light_state = true;
+      ws2812fx.start();
+    } else if (payload == LIGHT_OFF) {
+      light_state = false;
+    }
   }
   // handle brightness topic
   else if (strcmp(topic, LUX_COMMAND_TOPIC) == 0) {
