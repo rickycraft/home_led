@@ -32,10 +32,10 @@ void setEffect() {
 
 void update_led() {
   if (light_state) {
-    ws2812fx.stop();
+    ws2812fx.start();
     ws2812fx.setBrightness(lux);
     ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
-    ws2812fx.start();
+    // ws2812fx.start();
   } else {
     ws2812fx.setBrightness(0);
     ws2812fx.stop();
