@@ -39,14 +39,10 @@ void prettyPrint(char *s, int t, char *u) {
 };
 
 String byte_concat(byte *payload, size_t length) {
-  String _payload = (char *)payload;
-  return _payload.substring(0, length);
+  return String((char *)payload).substring(0, length);
 };
 
-int int_byte_concat(byte *payload, size_t lenght) {
-  String _payload = byte_concat(payload, lenght);
-  return _payload.toInt();
-}
+int int_byte_concat(byte *payload, size_t lenght) { return byte_concat(payload, lenght).toInt(); }
 
 char *stringToChar(String s) {
   int len = s.length() + 1;

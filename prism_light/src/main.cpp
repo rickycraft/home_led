@@ -1,9 +1,9 @@
 #include <prism.h>
 
 #pragma region const
-#define TOPIC_LEN 4
+#define TOPIC_LEN 5
 char *COMMAND_TOPIC[TOPIC_LEN] = {LIGHT_COMMAND_TOPIC, LUX_COMMAND_TOPIC, EFFECT_COMMAND_TOPIC,
-                                  SPEED_COMMAND_TOPIC};
+                                  SPEED_COMMAND_TOPIC, JSON_COMMAND_TOPIC};
 
 // vars
 bool startup = true;
@@ -17,7 +17,7 @@ uint16_t color = WHITE;                  // current effect speed
 #pragma endregion
 
 #pragma region ws2812fx
-void setEffect() {
+void set_effect() {
   if (effect_name == "static") effect = FX_MODE_STATIC;
   if (effect_name == "cycle") effect = FX_MODE_RAINBOW;
   if (effect_name == "rainbow") effect = FX_MODE_RAINBOW_CYCLE;
@@ -60,6 +60,8 @@ void publish_state() {
   mqtt.publish(EFFECT_STATE_TOPIC, stringToChar(effect_name));
   // current effect speed
   mqtt.publish(SPEED_STATE_TOPIC, ha_speed);
+  // json
+  encodeJson();
 }
 
 // function called when a MQTT message arrived
@@ -89,7 +91,7 @@ void callback(char *topic, byte *_payload, unsigned int _length) {
     // make sure payload is not empty
     if (payload.length() > 1) {
       effect_name = payload;
-      setEffect();
+      set_effect();
     }
     // handle speed topic
   } else if (strcmp(topic, SPEED_COMMAND_TOPIC) == 0) {
@@ -98,6 +100,8 @@ void callback(char *topic, byte *_payload, unsigned int _length) {
     ha_speed = new_speed;
     speed = (uint16_t)map(100 - new_speed, 0, 100, MAX_SPEED, MIN_SPEED);
     prettyPrint(SPEED_COMMAND_TOPIC, (int)speed);
+  } else if (strcmp(topic, JSON_COMMAND_TOPIC) == 0) {
+    decodeJson(byte_concat(_payload, _length));
   }
   if (startup && light_state) {
     light_state = false;
@@ -126,6 +130,48 @@ void update_alexa(uint8_t bri) {
   update_led();
 }
 #pragma endregion
+
+#pragma region json
+
+bool decodeJson(String message) {
+  StaticJsonDocument<JSON_BUFFER_SIZE> doc;
+  DeserializationError error = deserializeJson(doc, message);
+  if (error) return false;
+
+  // state topic
+  if (doc.containsKey("state"))
+    if (strcmp(doc["state"], LIGHT_ON) == 0) {
+      if (!light_state) ws2812fx.start();
+      light_state = true;
+    } else
+      light_state = false;
+  if (doc.containsKey("brightness")) lux = doc["brightness"].as<int>();
+  if (doc.containsKey("effect")) {
+    effect_name = String(doc["effect"].as<char *>());
+    set_effect();
+  }
+  // white value is speed
+  if (doc.containsKey("white_value")) {
+    int new_speed = doc["white_value"].as<int>();
+    ha_speed = new_speed;
+    speed = (uint16_t)map(255 - new_speed, 0, 255, MAX_SPEED, MIN_SPEED);
+  }
+  return true;
+}
+
+void encodeJson() {
+  StaticJsonDocument<JSON_BUFFER_SIZE> doc;
+  doc["state"] = (light_state) ? LIGHT_ON : LIGHT_OFF;
+  doc["brightness"] = lux;
+  doc["effect"] = effect_name.c_str();
+  doc["white_value"] = ha_speed;
+  int len = measureJson(doc) + 1;
+  char message[len];
+  serializeJson(doc, message, len);
+  mqtt.publish(JSON_STATE_TOPIC, message);
+}
+
+#pragma endregion  // json
 
 void setup() {
   // safe startup
