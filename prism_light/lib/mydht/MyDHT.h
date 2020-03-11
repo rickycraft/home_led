@@ -5,7 +5,7 @@
 #include <MqttUtil.h>
 #include <Util.h>
 
-#define READ_TIMEOUT 60000
+#define READ_TIMEOUT 600000  // update evry 10 min
 #define DHTTYPE DHT22
 #define DELTA_TEMP 0.45
 #define DELTA_HUMI 1.50
