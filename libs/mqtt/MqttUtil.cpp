@@ -1,8 +1,5 @@
 #include <MqttUtil.h>
 
-// WiFiClient espClient;
-// PubSubClient client(espClient);
-
 MqttUtil::MqttUtil(const char *client_id, const char *topic) : client_id(client_id), topic(topic) {}
 
 void MqttUtil::start(void cb(char *t, byte *p, unsigned int l)) {
