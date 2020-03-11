@@ -1,17 +1,13 @@
 #include <prism.h>
 
 #pragma region const
-#define TOPIC_LEN 5
-char *COMMAND_TOPIC[TOPIC_LEN] = {LIGHT_COMMAND_TOPIC, LUX_COMMAND_TOPIC, EFFECT_COMMAND_TOPIC,
-                                  SPEED_COMMAND_TOPIC, JSON_COMMAND_TOPIC};
-
 // vars
 bool startup = true;
 boolean light_state = false;             // current light state
-uint8_t lux = 100;                       // current brightness
+uint8_t lux = 255;                       // current brightness
 uint8_t effect = FX_MODE_RAINBOW_CYCLE;  // current effect
 String effect_name = "rainbow";          // current effect name
-uint8_t ha_speed = 50;                   // current ha effect speed
+uint8_t ha_speed = 128;                  // current ha effect speed
 uint16_t speed = HA_SPEED;               // current effect speed
 uint16_t color = WHITE;                  // current effect speed
 #pragma endregion
@@ -33,10 +29,8 @@ void set_effect() {
 
 void update_led() {
   if (light_state) {
-    // ws2812fx.start();
     ws2812fx.setBrightness(lux);
-    ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
-    // ws2812fx.start();
+    ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, BLUE, speed, GAMMA);
   } else {
     ws2812fx.setBrightness(0);
     ws2812fx.stop();
@@ -51,93 +45,12 @@ void off() {
 #pragma endregion
 
 #pragma region mqtt
-void publish_state() {
-  // light state
-  mqtt.publish(LIGHT_STATE_TOPIC, (light_state) ? LIGHT_ON : LIGHT_OFF);
-  // light brightness
-  mqtt.publish(LUX_STATE_TOPIC, lux);
-  // current effect_name
-  mqtt.publish(EFFECT_STATE_TOPIC, stringToChar(effect_name));
-  // current effect speed
-  mqtt.publish(SPEED_STATE_TOPIC, ha_speed);
-  // json
-  encodeJson();
-}
-
-// function called when a MQTT message arrived
-void callback(char *topic, byte *_payload, unsigned int _length) {
-  // handle state topic
-  if (strcmp(topic, LIGHT_COMMAND_TOPIC) == 0) {
-    String payload = byte_concat(_payload, _length);
-    prettyPrint(LIGHT_COMMAND_TOPIC, payload);
-    if (payload == LIGHT_ON && !light_state) {
-      light_state = true;
-      ws2812fx.start();
-    } else if (payload == LIGHT_OFF) {
-      light_state = false;
-    }
-  }
-  // handle brightness topic
-  else if (strcmp(topic, LUX_COMMAND_TOPIC) == 0) {
-    uint16_t brightness = int_byte_concat(_payload, _length);
-    prettyPrint(LUX_COMMAND_TOPIC, brightness);
-    if (brightness < 0 || brightness > 255) return;
-    lux = brightness;
-  }
-  // handle effect topic
-  else if (strcmp(topic, EFFECT_COMMAND_TOPIC) == 0) {
-    String payload = byte_concat(_payload, _length);
-    prettyPrint(EFFECT_COMMAND_TOPIC, payload);
-    // make sure payload is not empty
-    if (payload.length() > 1) {
-      effect_name = payload;
-      set_effect();
-    }
-    // handle speed topic
-  } else if (strcmp(topic, SPEED_COMMAND_TOPIC) == 0) {
-    uint8_t new_speed = int_byte_concat(_payload, _length);
-    if (new_speed < 0 || new_speed > 100) return;
-    ha_speed = new_speed;
-    speed = (uint16_t)map(100 - new_speed, 0, 100, MAX_SPEED, MIN_SPEED);
-    prettyPrint(SPEED_COMMAND_TOPIC, (int)speed);
-  } else if (strcmp(topic, JSON_COMMAND_TOPIC) == 0) {
-    decodeJson(byte_concat(_payload, _length));
-  }
-  if (startup && light_state) {
-    light_state = false;
-    startup = false;
-    Serial.println("~ startup done");
-  }
-  update_led();
-}
-#pragma endregion
-
-#pragma region alexa
-Espalexa alexa;
-
-void update_alexa(uint8_t bri) {
-  mqtt.reset();
-  if (bri == 0)
-    light_state = false;
-  else {
-    if (light_state)
-      lux = bri;
-    else
-      light_state = true;
-  }
-  prettyPrint("alexa/lux", lux);
-  prettyPrint("alexa/switch", (light_state) ? "ON" : "OFF");
-  update_led();
-}
-#pragma endregion
-
-#pragma region json
 
 bool decodeJson(String message) {
   StaticJsonDocument<JSON_BUFFER_SIZE> doc;
   DeserializationError error = deserializeJson(doc, message);
   if (error) return false;
-
+  prettyPrint("json", message);
   // state topic
   if (doc.containsKey("state"))
     if (strcmp(doc["state"], LIGHT_ON) == 0) {
@@ -159,19 +72,46 @@ bool decodeJson(String message) {
   return true;
 }
 
-void encodeJson() {
+void publish_state() {
   StaticJsonDocument<JSON_BUFFER_SIZE> doc;
   doc["state"] = (light_state) ? LIGHT_ON : LIGHT_OFF;
   doc["brightness"] = lux;
   doc["effect"] = effect_name.c_str();
   doc["white_value"] = ha_speed;
+
   int len = measureJson(doc) + 1;
   char message[len];
   serializeJson(doc, message, len);
+
   mqtt.publish(JSON_STATE_TOPIC, message);
 }
+// function called when a MQTT message arrived
+void callback(char *topic, byte *_payload, unsigned int _length) {
+  // handle state topic
+  if (strcmp(topic, JSON_COMMAND_TOPIC) == 0) decodeJson(byte_concat(_payload, _length));
+  update_led();
+}
 
-#pragma endregion  // json
+#pragma endregion  // mqtt
+
+void update_alexa(uint8_t bri) {
+  mqtt.reset();
+
+  if (bri == 0)
+    light_state = false;
+  else {
+    if (light_state)
+      lux = bri;
+    else {
+      light_state = true;
+      ws2812fx.start();
+    }
+  }
+
+  prettyPrint("alexa/lux", lux);
+  prettyPrint("alexa/switch", (light_state) ? "ON" : "OFF");
+  update_led();
+}
 
 void setup() {
   // safe startup
@@ -182,7 +122,7 @@ void setup() {
   wifi = WiFiUtil(HOSTNAME);
   yield();
   // init the MQTT connection
-  mqtt = MqttUtil(CLIENT_ID, COMMAND_TOPIC, TOPIC_LEN, LIGHT_STATE_TOPIC);
+  mqtt = MqttUtil(CLIENT_ID, JSON_COMMAND_TOPIC);
   mqtt.start(callback);
   yield();
   // init dht22

@@ -28,16 +28,6 @@ void prettyPrint(char *s, int t) {  //
   prettyPrint(String(s), String(t));
 };
 
-void prettyPrint(char *s, int t, char *u) {
-  String _s = String(s);
-  int l = PRETTY_PRINT_LEN - _s.length();
-  Serial.print("~ ");
-  Serial.print(s);
-  for (int i = 0; i < l; i++) Serial.print(" ");
-  Serial.print(t);
-  Serial.println(u);
-};
-
 String byte_concat(byte *payload, size_t length) {
   return String((char *)payload).substring(0, length);
 };
