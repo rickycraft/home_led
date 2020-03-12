@@ -27,13 +27,14 @@ void MqttUtil::connect() {
 void MqttUtil::loop(void off()) {
   if (!client.loop()) {
     // turn off the first time
-    if (client.state() != MQTT_CONNECT_FAILED) off();
+    if (attempts == 2) off();
     // try 10 times
     if (attempts < MAX_ATTEMPT && client.state() != MQTT_CONNECTED &&
         (millis() - last_attempt > MQTT_TIMEOUT)) {
       connect();
       attempts++;
     }
+    if (attempts >= MAX_ATTEMPT) ESP.restart();
   }
 }
 
