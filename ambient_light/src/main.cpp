@@ -9,9 +9,6 @@ void update_alexa(uint8_t bri) {
   lux = (bri != 0 && light_state) ? bri : lux;
   // if bri == 0 just turn off
   light_state = (bri == 0) ? false : true;
-
-  prettyPrint("alexa/lux", lux);
-  prettyPrint("alexa/switch", (light_state) ? "ON" : "OFF");
   update_led();
 }
 
@@ -21,7 +18,6 @@ bool decodeJson(String message) {
   StaticJsonDocument<JSON_BUFFER_SIZE> doc;
   DeserializationError error = deserializeJson(doc, message);
   if (error) return false;
-  prettyPrint("json", message);
   // state topic
   if (doc.containsKey("state")) light_state = (strcmp(doc["state"], LIGHT_ON) == 0) ? true : false;
   if (doc.containsKey("brightness")) lux = doc["brightness"].as<int>();
@@ -71,19 +67,17 @@ void setup() {
   Serial.begin(115200);
   // init the led
   pinMode(LED_PIN, OUTPUT);
-  analogWrite(LED_PIN, 150);
+  digitalWrite(LED_PIN, LOW);
   // init the WiFi connection
   wifi = WiFiUtil(HOSTNAME);
   yield();
   // init the MQTT connection
-  mqtt = MqttUtil(CLIENT_ID, COMMAND_TOPIC);
+  mqtt = MqttUtil(CLIENT_ID, COMMAND_TOPIC, true);
   mqtt.start(callback);
   yield();
   // init alexa
   alexa.addDevice(ALEXA_NAME, update_alexa);
   alexa.begin();
-  // end of setup
-  digitalWrite(LED_PIN, LOW);
 }
 
 void loop() {

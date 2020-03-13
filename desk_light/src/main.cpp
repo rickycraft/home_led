@@ -93,7 +93,7 @@ void setup() {
   wifi = WiFiUtil(HOSTNAME);
   yield();
   // init the MQTT connection
-  mqtt = MqttUtil(CLIENT_ID, COMMAND_TOPIC);
+  mqtt = MqttUtil(CLIENT_ID, COMMAND_TOPIC, false);
   mqtt.start(callback);
   yield();
   // init alexa

@@ -1,6 +1,7 @@
 #include <MqttUtil.h>
 
-MqttUtil::MqttUtil(const char *client_id, const char *topic) : client_id(client_id), topic(topic) {}
+MqttUtil::MqttUtil(const char *client_id, const char *topic, bool restart)
+    : client_id(client_id), topic(topic), restart(restart) {}
 
 void MqttUtil::start(void cb(char *t, byte *p, unsigned int l)) {
   // init the client
@@ -34,15 +35,13 @@ void MqttUtil::loop(void off()) {
       connect();
       attempts++;
     }
-    if (attempts >= MAX_ATTEMPT) ESP.restart();
+    // if restart on max attempt is true reset
+    if (restart) reset();
   }
 }
 
 void MqttUtil::reset() {
-  if (attempts >= MAX_ATTEMPT) {
-    Serial.println("mqtt reset");
-    ESP.restart();
-  }
+  if (attempts >= MAX_ATTEMPT) ESP.restart();
 }
 
 void MqttUtil::publish(char *topic, const char *t) { client.publish(topic, t, true); }
