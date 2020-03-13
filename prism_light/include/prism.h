@@ -20,10 +20,9 @@
 #define HOSTNAME "prism"
 // json
 #define JSON_BUFFER_SIZE JSON_OBJECT_SIZE(15)
-// mqtt
 #define CLIENT_ID "prism_light"
-#define JSON_STATE_TOPIC "prism/json/state"
-#define JSON_COMMAND_TOPIC "prism/json/set"
+#define STATE_TOPIC "prism/json/state"
+#define COMMAND_TOPIC "prism/json/set"
 
 MyDHT dht;
 WiFiUtil wifi;

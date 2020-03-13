@@ -83,20 +83,18 @@ void publish_state() {
   char message[len];
   serializeJson(doc, message, len);
 
-  mqtt.publish(JSON_STATE_TOPIC, message);
+  mqtt.publish(STATE_TOPIC, message);
 }
 // function called when a MQTT message arrived
 void callback(char *topic, byte *_payload, unsigned int _length) {
   // handle state topic
-  if (strcmp(topic, JSON_COMMAND_TOPIC) == 0) decodeJson(byte_concat(_payload, _length));
+  if (strcmp(topic, COMMAND_TOPIC) == 0) decodeJson(byte_concat(_payload, _length));
   update_led();
 }
 
 #pragma endregion  // mqtt
 
 void update_alexa(uint8_t bri) {
-  mqtt.reset();
-
   if (bri == 0)
     light_state = false;
   else {
@@ -109,7 +107,7 @@ void update_alexa(uint8_t bri) {
   }
 
   prettyPrint("alexa/lux", lux);
-  prettyPrint("alexa/switch", (light_state) ? "ON" : "OFF");
+  prettyPrint("alexa/switch ", (light_state) ? "ON" : "OFF");
   update_led();
 }
 
@@ -122,7 +120,7 @@ void setup() {
   wifi = WiFiUtil(HOSTNAME);
   yield();
   // init the MQTT connection
-  mqtt = MqttUtil(CLIENT_ID, JSON_COMMAND_TOPIC);
+  mqtt = MqttUtil(CLIENT_ID, COMMAND_TOPIC);
   mqtt.start(callback);
   yield();
   // init dht22
