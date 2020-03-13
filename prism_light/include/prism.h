@@ -21,8 +21,8 @@
 // json
 #define JSON_BUFFER_SIZE JSON_OBJECT_SIZE(15)
 #define CLIENT_ID "prism_light"
-#define STATE_TOPIC "prism/json/state"
-#define COMMAND_TOPIC "prism/json/set"
+#define STATE_TOPIC "prism/state"
+#define COMMAND_TOPIC "prism/set"
 
 MyDHT dht;
 WiFiUtil wifi;
