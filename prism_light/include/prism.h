@@ -10,7 +10,7 @@
 #include <WiFiUtil.h>
 
 // VARS
-#define LED_COUNT 60
+#define LED_COUNT 53
 #define LED_PIN 0
 // bigger is slower
 #define MAX_SPEED 2000
