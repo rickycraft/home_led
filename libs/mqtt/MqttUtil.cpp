@@ -18,6 +18,7 @@ void MqttUtil::connect() {
 
   if (client.connect(client_id, MQTT_USER, MQTT_PASS, topic, 0, true, "{\"state\": \"OFF\"}")) {
     client.subscribe(topic);
+    attempts = 0;
     Serial.println("connected");
   } else
     Serial.println("failed");

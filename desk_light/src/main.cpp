@@ -86,8 +86,9 @@ void setup() {
   Serial.begin(115200);
   // init the led
   pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-  analogWrite(LED_PIN, 150);
   buttonStatus = digitalRead(BUTTON_PIN);
   // init the WiFi connection
   wifi = WiFiUtil(HOSTNAME);
@@ -99,8 +100,6 @@ void setup() {
   // init alexa
   alexa.addDevice(ALEXA_NAME, update_alexa);
   alexa.begin();
-  // end setup
-  digitalWrite(LED_PIN, LOW);
 }
 
 void loop() {
