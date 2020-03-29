@@ -113,6 +113,8 @@ void update_alexa(uint8_t bri) {
 
 void setup() {
   // safe startup
+  pinMode(BUILTIN_LED, OUTPUT);
+  digitalWrite(BUILTIN_LED, LOW);
   delay(1000);
   Serial.begin(115200);
   Serial.printf("\nplatform.io version\n");
@@ -131,6 +133,7 @@ void setup() {
   alexa.addDevice(ALEXA_NAME, update_alexa);
   alexa.begin();
   // end of setup
+  digitalWrite(BUILTIN_LED, HIGH);
   Serial.println();
 }
 
