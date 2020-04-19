@@ -27,10 +27,14 @@ void set_effect() {
   if (effect_name == "tricolor chase") effect = FX_MODE_TRICOLOR_CHASE;
 }
 
+#define MAX_BRI 240
 void update_led() {
   if (light_state) {
-    ws2812fx.setBrightness(lux);
-    ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, BLUE, speed, GAMMA);
+    if (lux > MAX_BRI)
+      ws2812fx.setBrightness(MAX_BRI);
+    else
+      ws2812fx.setBrightness(lux);
+    ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
   } else {
     ws2812fx.setBrightness(0);
     ws2812fx.stop();
