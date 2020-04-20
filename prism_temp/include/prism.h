@@ -3,6 +3,7 @@
 #include <Espalexa.h>
 #include <MqttBroker.h>
 #include <OtaUpdatates.h>
+#include <SensorUtil.h>
 #include <WS2812FX.h>
 
 // VARS

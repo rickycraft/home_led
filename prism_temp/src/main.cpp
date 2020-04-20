@@ -31,15 +31,15 @@ void set_effect() {
 
 #define MAX_BRI 240
 void update_led() {
+    Serial.printf("state: %d, lux: %d\n", light_state, lux);
     if (light_state) {
         if (lux > MAX_BRI)
             ws2812fx.setBrightness(MAX_BRI);
         else
             ws2812fx.setBrightness(lux);
-        ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
+        // ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
     } else {
         ws2812fx.setBrightness(0);
-        ws2812fx.stop();
     }
     publish_state();
     update = false;
@@ -55,7 +55,6 @@ bool decodeJson(String message) {
     // state topic
     if (doc.containsKey("state"))
         if (strcmp(doc["state"], LIGHT_ON) == 0) {
-            if (!light_state) ws2812fx.start();
             light_state = true;
         } else
             light_state = false;
@@ -85,15 +84,17 @@ void publish_state() {
     char message[len];
     serializeJson(doc, message, len);
 
-    mqttClient.publish(STATE_TOPIC, 1, true, message);
+    mqttClient.publish(STATE_TOPIC, 2, true, message);
 }
 
 void onMqttConnect(bool sessionPresent) {
     Serial.println("connected");
 
-    uint16_t packetIdSub = mqttClient.subscribe(COMMAND_TOPIC, 1);
+    uint16_t packetIdSub = mqttClient.subscribe(COMMAND_TOPIC, 2);
     Serial.print("Subscribe to: ");
     Serial.println(COMMAND_TOPIC);
+
+    sensor_setup();
 }
 
 void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties,
@@ -128,6 +129,8 @@ void setup() {
     mqttSetup(CLIENT_ID, STATE_TOPIC);
     // init ws2812fx
     ws2812fx.init();
+    ws2812fx.start();
+    ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
     // init alexa
     alexa.addDevice(ALEXA_NAME, update_alexa);
     alexa.begin();
@@ -139,7 +142,13 @@ void setup() {
 
 void loop() {
     if (update) update_led();
-    ArduinoOTA.handle();
     ws2812fx.service();
+    ArduinoOTA.handle();
+    sensor_read();
     alexa.loop();
+    if (millis() > (10 * 60 * 1000)) {
+        Serial.println();
+        Serial.println("RESETTING");
+        ESP.reset();
+    }
 }

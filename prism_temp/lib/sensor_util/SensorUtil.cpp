@@ -10,6 +10,7 @@ unsigned long last_update = millis();
 bool did_setup = false;
 
 void sensor_setup() {
+    Serial.println("Sensor setup");
     if (!aht.begin(SDA, SCL))
         Serial.println("failed begin of ATH10");
     else
@@ -26,7 +27,7 @@ void sensor_read() {
         t = aht_t;
         Serial.printf("new temp %.1f\n", t);
         snprintf(t_buff, BUFFER_SIZE, "%.1f", t);
-        mqttClient.publish(TEMP_TOPIC, 1, true, t_buff);
+        mqttClient.publish(TEMP_TOPIC, 2, true, t_buff);
     }
 
     float aht_h = aht.readHumidity(false);
@@ -34,7 +35,7 @@ void sensor_read() {
         h = aht_h;
         Serial.printf("new humi %.0f\n", h);
         snprintf(h_buff, BUFFER_SIZE, "%.0f", h);
-        mqttClient.publish(HUMIDITY_TOPIC, 1, true, h_buff);
+        mqttClient.publish(HUMIDITY_TOPIC, 2, true, h_buff);
     }
 
     last_update = millis();
