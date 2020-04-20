@@ -131,12 +131,15 @@ void setup() {
     // init alexa
     alexa.addDevice(ALEXA_NAME, update_alexa);
     alexa.begin();
+    // setup ota
+    espOTA(HOSTNAME);
     // end of setup
     digitalWrite(BUILTIN_LED, HIGH);
 }
 
 void loop() {
     if (update) update_led();
+    ArduinoOTA.handle();
     ws2812fx.service();
     alexa.loop();
 }

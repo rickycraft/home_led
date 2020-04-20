@@ -29,7 +29,7 @@ void connectToMqtt() {
 }
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
-    Serial.println("Disconnected from MQTT, code:");
+    Serial.print("Disconnected from MQTT, code: ");
     Serial.println((int8_t)reason);
     if (WiFi.isConnected()) mqttReconnectTimer.once(2, connectToMqtt);
 }

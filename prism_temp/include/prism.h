@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <Espalexa.h>
 #include <MqttBroker.h>
+#include <OtaUpdatates.h>
 #include <WS2812FX.h>
 
 // VARS
