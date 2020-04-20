@@ -37,9 +37,10 @@ void update_led() {
             ws2812fx.setBrightness(MAX_BRI);
         else
             ws2812fx.setBrightness(lux);
-        // ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
+        ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
     } else {
         ws2812fx.setBrightness(0);
+        ws2812fx.stop();
     }
     publish_state();
     update = false;
@@ -55,6 +56,7 @@ bool decodeJson(String message) {
     // state topic
     if (doc.containsKey("state"))
         if (strcmp(doc["state"], LIGHT_ON) == 0) {
+            if (!light_state) ws2812fx.start();
             light_state = true;
         } else
             light_state = false;
@@ -123,14 +125,12 @@ void setup() {
     pinMode(BUILTIN_LED, OUTPUT);
     digitalWrite(BUILTIN_LED, LOW);
     delay(1000);
-    Serial.begin(115200);
+    Serial.begin(19200);
     Serial.println();
     // mqtt setup
     mqttSetup(CLIENT_ID, STATE_TOPIC);
     // init ws2812fx
     ws2812fx.init();
-    ws2812fx.start();
-    ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
     // init alexa
     alexa.addDevice(ALEXA_NAME, update_alexa);
     alexa.begin();
@@ -146,9 +146,4 @@ void loop() {
     ArduinoOTA.handle();
     sensor_read();
     alexa.loop();
-    if (millis() > (10 * 60 * 1000)) {
-        Serial.println();
-        Serial.println("RESETTING");
-        ESP.reset();
-    }
 }

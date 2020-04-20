@@ -31,6 +31,7 @@ void connectToMqtt() {
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
     Serial.print("Disconnected from MQTT, code: ");
     Serial.println((int8_t)reason);
+    if ((int8_t)reason == 0) ESP.reset();
     if (WiFi.isConnected()) mqttReconnectTimer.once(2, connectToMqtt);
 }
 
