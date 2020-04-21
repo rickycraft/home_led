@@ -20,7 +20,37 @@ uint16_t color = WHITE;                  // current effect speed
 #pragma endregion
 
 #pragma region led strip
-void set_effect() {
+
+void set_state(bool new_state) {
+    // if it powers on
+    if (!light_state && new_state) led_strip.start();
+    // if it powers off
+    else if (light_state && !new_state) {
+        set_lux(0);
+        led_strip.stop();
+    }
+    light_state = new_state;
+}
+
+void set_lux(int new_lux) {
+    // if out of bound do nothing
+    if (new_lux < 0 || new_lux > 255) return;
+    lux = new_lux;
+    // avoid using max brightness
+    if (new_lux > MAX_BRI) new_lux = MAX_BRI;
+
+    led_strip.setBrightness(new_lux);
+}
+
+void set_speed(int new_speed) {
+    ha_speed = new_speed;
+    speed = (uint16_t)map(255 - new_speed, 0, 255, MAX_SPEED, MIN_SPEED);
+
+    led_strip.setSpeed(speed);
+}
+
+void set_effect(String new_effect_name) {
+    effect_name = new_effect_name;
     if (effect_name == "static") effect = FX_MODE_STATIC;
     if (effect_name == "cycle") effect = FX_MODE_RAINBOW;
     if (effect_name == "rainbow") effect = FX_MODE_RAINBOW_CYCLE;
@@ -32,24 +62,10 @@ void set_effect() {
     if (effect_name == "running random") effect = FX_MODE_RUNNING_RANDOM;
     if (effect_name == "bicolor chase") effect = FX_MODE_BICOLOR_CHASE;
     if (effect_name == "tricolor chase") effect = FX_MODE_TRICOLOR_CHASE;
+
+    led_strip.setMode(effect);
 }
 
-#define MAX_BRI 240
-void update_led() {
-    Serial.printf("state: %d, lux: %d\n", light_state, lux);
-    if (light_state) {
-        if (lux > MAX_BRI)
-            led_strip.setBrightness(MAX_BRI);
-        else
-            led_strip.setBrightness(lux);
-        led_strip.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, false);
-    } else {
-        led_strip.setBrightness(0);
-        led_strip.stop();
-    }
-    publish_state();
-    update = false;
-}
 #pragma endregion
 
 #pragma region mqtt
@@ -60,23 +76,15 @@ bool decodeJson(String message) {
     if (error) return false;
     // state topic
     if (doc.containsKey("state"))
-        if (strcmp(doc["state"], LIGHT_ON) == 0) {
-            if (!light_state) led_strip.start();
-            light_state = true;
-        } else
-            light_state = false;
-    if (doc.containsKey("brightness")) lux = doc["brightness"].as<int>();
-    if (doc.containsKey("effect")) {
-        effect_name = String(doc["effect"].as<char*>());
-        set_effect();
-    }
+        if (strcmp(doc["state"], LIGHT_ON) == 0)
+            set_state(true);
+        else
+            set_state(false);
+    if (doc.containsKey("brightness")) set_lux(doc["brightness"].as<int>());
+    if (doc.containsKey("effect")) set_effect(String(doc["effect"].as<char*>()));
     // white value is speed
-    if (doc.containsKey("white_value")) {
-        int new_speed = doc["white_value"].as<int>();
-        ha_speed = new_speed;
-        speed = (uint16_t)map(255 - new_speed, 0, 255, MAX_SPEED, MIN_SPEED);
-    }
-    update = true;
+    if (doc.containsKey("white_value")) set_speed(doc["white_value"].as<int>());
+
     return true;
 }
 
@@ -146,7 +154,6 @@ void setup() {
 }
 
 void loop() {
-    if (update) update_led();
     led_strip.service();
     ArduinoOTA.handle();
     sensor_read();
