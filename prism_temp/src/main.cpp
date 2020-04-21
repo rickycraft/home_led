@@ -3,69 +3,77 @@
 #pragma region vars
 
 #define PIN 2
-typedef NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod> NEOMETHOD;  // uses GPIO3/RX
+
 NEOMETHOD strip(LED_COUNT, PIN);  // PIN is ignored for ESP8266
 NeoAnimationFX<NEOMETHOD> led_strip(strip);
 
+String effect_name = "rainbow";  // current effect name
+uint8_t ha_speed = 128;          // current ha effect speed
+uint16_t color = WHITE;          // current effect speed
+
+// force state update
 bool update = false;
-bool startup = true;
-boolean light_state = false;             // current light state
-uint8_t lux = 255;                       // current brightness
-uint8_t effect = FX_MODE_RAINBOW_CYCLE;  // current effect
-String effect_name = "rainbow";          // current effect name
-uint8_t ha_speed = 128;                  // current ha effect speed
-uint16_t speed = HA_SPEED;               // current effect speed
-uint16_t color = WHITE;                  // current effect speed
+LedStatus current_status = {false, 0, FX_MODE_STATIC, 0};
+LedStatus new_status = {false, 255, FX_MODE_RAINBOW_CYCLE, HA_SPEED};
 
 #pragma endregion
 
 #pragma region led strip
 
-void set_state(bool new_state) {
-    // if it powers on
-    if (!light_state && new_state) led_strip.start();
-    // if it powers off
-    else if (light_state && !new_state) {
-        set_lux(0);
-        led_strip.stop();
+int get_effect_code() {
+    if (effect_name == "static") return FX_MODE_STATIC;
+    if (effect_name == "cycle") return FX_MODE_RAINBOW;
+    if (effect_name == "rainbow") return FX_MODE_RAINBOW_CYCLE;
+    if (effect_name == "wipe random") return FX_MODE_COLOR_WIPE_RANDOM;
+    if (effect_name == "running lights") return FX_MODE_RUNNING_LIGHTS;
+    if (effect_name == "chase rainbow") return FX_MODE_CHASE_RAINBOW;
+    if (effect_name == "theatre chase rainbow") return FX_MODE_THEATER_CHASE_RAINBOW;
+    if (effect_name == "color sweep random") return FX_MODE_COLOR_SWEEP_RANDOM;
+    if (effect_name == "running random") return FX_MODE_RUNNING_RANDOM;
+    if (effect_name == "bicolor chase") return FX_MODE_BICOLOR_CHASE;
+    if (effect_name == "tricolor chase") return FX_MODE_TRICOLOR_CHASE;
+    // just in case
+    return FX_MODE_RAINBOW_CYCLE;
+}
+
+void update_led() {
+    // update status
+    if (current_status.state != new_status.state) {
+        current_status.state = new_status.state;
+        // if power on
+        if (current_status.state) {
+            // force lux update
+            current_status.lux = new_status.lux;
+            led_strip.setBrightness(current_status.lux);
+            led_strip.start();
+        } else {
+            // if power off
+            led_strip.setBrightness(0);
+            led_strip.stop();
+        }
     }
-    light_state = new_state;
+    // update lux
+    if (current_status.lux != new_status.lux) {
+        current_status.lux = new_status.lux;
+        // TODO to maybe avoid flikering, to be tested
+        if (current_status.lux > MAX_BRI)
+            led_strip.setBrightness(MAX_BRI);
+        else
+            led_strip.setBrightness(current_status.lux);
+    }
+    // update speed
+    if (current_status.speed != new_status.speed) {
+        current_status.speed = new_status.speed;
+        led_strip.setSpeed(current_status.speed);
+    }
+    // update effect
+    if (current_status.effect_code != new_status.effect_code) {
+        current_status.effect_code = new_status.effect_code;
+        led_strip.setMode(current_status.effect_code);
+    }
+    update = false;
+    publish_state();
 }
-
-void set_lux(int new_lux) {
-    // if out of bound do nothing
-    if (new_lux < 0 || new_lux > 255) return;
-    lux = new_lux;
-    // avoid using max brightness
-    if (new_lux > MAX_BRI) new_lux = MAX_BRI;
-
-    led_strip.setBrightness(new_lux);
-}
-
-void set_speed(int new_speed) {
-    ha_speed = new_speed;
-    speed = (uint16_t)map(255 - new_speed, 0, 255, MAX_SPEED, MIN_SPEED);
-
-    led_strip.setSpeed(speed);
-}
-
-void set_effect(String new_effect_name) {
-    effect_name = new_effect_name;
-    if (effect_name == "static") effect = FX_MODE_STATIC;
-    if (effect_name == "cycle") effect = FX_MODE_RAINBOW;
-    if (effect_name == "rainbow") effect = FX_MODE_RAINBOW_CYCLE;
-    if (effect_name == "wipe random") effect = FX_MODE_COLOR_WIPE_RANDOM;
-    if (effect_name == "running lights") effect = FX_MODE_RUNNING_LIGHTS;
-    if (effect_name == "chase rainbow") effect = FX_MODE_CHASE_RAINBOW;
-    if (effect_name == "theatre chase rainbow") effect = FX_MODE_THEATER_CHASE_RAINBOW;
-    if (effect_name == "color sweep random") effect = FX_MODE_COLOR_SWEEP_RANDOM;
-    if (effect_name == "running random") effect = FX_MODE_RUNNING_RANDOM;
-    if (effect_name == "bicolor chase") effect = FX_MODE_BICOLOR_CHASE;
-    if (effect_name == "tricolor chase") effect = FX_MODE_TRICOLOR_CHASE;
-
-    led_strip.setMode(effect);
-}
-
 #pragma endregion
 
 #pragma region mqtt
@@ -76,22 +84,26 @@ bool decodeJson(String message) {
     if (error) return false;
     // state topic
     if (doc.containsKey("state"))
-        if (strcmp(doc["state"], LIGHT_ON) == 0)
-            set_state(true);
-        else
-            set_state(false);
-    if (doc.containsKey("brightness")) set_lux(doc["brightness"].as<int>());
-    if (doc.containsKey("effect")) set_effect(String(doc["effect"].as<char*>()));
+        new_status.state = (strcmp(doc["state"], LIGHT_ON) == 0) ? true : false;
+    // brightness topic
+    if (doc.containsKey("brightness")) new_status.lux = doc["brightness"].as<int>();
+    if (doc.containsKey("effect")) {
+        effect_name = String(doc["effect"].as<char*>());
+        new_status.effect_code = get_effect_code();
+    }
     // white value is speed
-    if (doc.containsKey("white_value")) set_speed(doc["white_value"].as<int>());
-
+    if (doc.containsKey("white_value")) {
+        ha_speed = doc["white_value"].as<int>();
+        new_status.speed = (uint16_t)map(255 - ha_speed, 0, 255, MAX_SPEED, MIN_SPEED);
+    }
+    update = true;
     return true;
 }
 
 void publish_state() {
     StaticJsonDocument<JSON_BUFFER_SIZE> doc;
-    doc["state"] = (light_state) ? LIGHT_ON : LIGHT_OFF;
-    doc["brightness"] = lux;
+    doc["state"] = (new_status.state) ? LIGHT_ON : LIGHT_OFF;
+    doc["brightness"] = new_status.lux;
     doc["effect"] = effect_name.c_str();
     doc["white_value"] = ha_speed;
 
@@ -120,15 +132,13 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
 }
 
 #pragma endregion  // mqtt
-
+Espalexa alexa;
 void update_alexa(uint8_t bri) {
     if (bri == 0)
-        light_state = false;
+        new_status.state = false;
     else {
-        if (light_state)
-            lux = bri;
-        else
-            light_state = true;
+        new_status.lux = bri;
+        new_status.state = true;
     }
     update = true;
 }
@@ -144,6 +154,7 @@ void setup() {
     mqttSetup(CLIENT_ID, STATE_TOPIC);
     // init ws2812fx
     led_strip.init();
+    led_strip.setColor(color);
     // init alexa
     alexa.addDevice(ALEXA_NAME, update_alexa);
     alexa.begin();
@@ -154,6 +165,7 @@ void setup() {
 }
 
 void loop() {
+    if (update) update_led();
     led_strip.service();
     ArduinoOTA.handle();
     sensor_read();

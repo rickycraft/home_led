@@ -7,13 +7,13 @@
 #include <SensorUtil.h>
 
 // VARS
-#define LED_COUNT 53
+#define LED_COUNT 60
 #define LED_PIN 2
 // bigger is slower
 #define MAX_SPEED 2000
 #define MIN_SPEED 15000
 #define HA_SPEED 8576
-#define MAX_BRI 240
+#define MAX_BRI 255
 #define ALEXA_NAME "prisma"
 #define HOSTNAME "prism"
 // json
@@ -22,12 +22,17 @@
 #define STATE_TOPIC "prism/state"
 #define COMMAND_TOPIC "prism/set"
 
-Espalexa alexa;
+typedef struct LedStatus {
+    bool state;
+    int lux;
+    int effect_code;
+    int speed;
+};
+
+typedef NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod> NEOMETHOD;  // uses GPIO3/RX
 
 void update_alexa(uint8_t bri);
 bool decodeJson(String message);
 void publish_state();
-void set_state(bool new_state);
-void set_lux(int new_lux);
-void set_speed(int new_speed);
-void set_effect(String new_effect_name);
+int get_effect_code();
+void update_led();

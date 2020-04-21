@@ -41,7 +41,7 @@ void onMqttUnsubscribe(uint16_t packetId) { Serial.println("unsub ack"); }
 
 void onMqttPublish(uint16_t packetId) {
     //
-    Serial.println("pub ack");
+    // Serial.println("pub ack");
 }
 
 void mqttSetup(const char* client_id, const char* will_topic) {
