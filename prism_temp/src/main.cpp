@@ -2,6 +2,11 @@
 
 #pragma region vars
 
+#define PIN 2
+typedef NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod> NEOMETHOD;  // uses GPIO3/RX
+NEOMETHOD strip(LED_COUNT, PIN);  // PIN is ignored for ESP8266
+NeoAnimationFX<NEOMETHOD> led_strip(strip);
+
 bool update = false;
 bool startup = true;
 boolean light_state = false;             // current light state
@@ -14,7 +19,7 @@ uint16_t color = WHITE;                  // current effect speed
 
 #pragma endregion
 
-#pragma region ws2812fx
+#pragma region led strip
 void set_effect() {
     if (effect_name == "static") effect = FX_MODE_STATIC;
     if (effect_name == "cycle") effect = FX_MODE_RAINBOW;
@@ -34,13 +39,13 @@ void update_led() {
     Serial.printf("state: %d, lux: %d\n", light_state, lux);
     if (light_state) {
         if (lux > MAX_BRI)
-            ws2812fx.setBrightness(MAX_BRI);
+            led_strip.setBrightness(MAX_BRI);
         else
-            ws2812fx.setBrightness(lux);
-        ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
+            led_strip.setBrightness(lux);
+        led_strip.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, false);
     } else {
-        ws2812fx.setBrightness(0);
-        ws2812fx.stop();
+        led_strip.setBrightness(0);
+        led_strip.stop();
     }
     publish_state();
     update = false;
@@ -56,7 +61,7 @@ bool decodeJson(String message) {
     // state topic
     if (doc.containsKey("state"))
         if (strcmp(doc["state"], LIGHT_ON) == 0) {
-            if (!light_state) ws2812fx.start();
+            if (!light_state) led_strip.start();
             light_state = true;
         } else
             light_state = false;
@@ -130,7 +135,7 @@ void setup() {
     // mqtt setup
     mqttSetup(CLIENT_ID, STATE_TOPIC);
     // init ws2812fx
-    ws2812fx.init();
+    led_strip.init();
     // init alexa
     alexa.addDevice(ALEXA_NAME, update_alexa);
     alexa.begin();
@@ -142,7 +147,7 @@ void setup() {
 
 void loop() {
     if (update) update_led();
-    ws2812fx.service();
+    led_strip.service();
     ArduinoOTA.handle();
     sensor_read();
     alexa.loop();

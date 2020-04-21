@@ -2,13 +2,13 @@
 #include <ArduinoJson.h>
 #include <Espalexa.h>
 #include <MqttBroker.h>
+#include <NeoAnimationFX.h>
 #include <OtaUpdatates.h>
 #include <SensorUtil.h>
-#include <WS2812FX.h>
 
 // VARS
 #define LED_COUNT 53
-#define LED_PIN 0
+#define LED_PIN 2
 // bigger is slower
 #define MAX_SPEED 2000
 #define MIN_SPEED 15000
@@ -22,7 +22,6 @@
 #define COMMAND_TOPIC "prism/set"
 
 Espalexa alexa;
-WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 void update_alexa(uint8_t bri);
 bool decodeJson(String message);
