@@ -20,7 +20,6 @@ void sensor_setup() {
 void sensor_read() {
     if ((millis() - last_update) < READ_TIMEOUT || !did_setup) return;
     aht.readRawData();
-    Serial.println("reading new data");
 
     float aht_t = aht.readTemperature(false);
     if (absolute(t - aht_t) > DELTA_TEMP) {
