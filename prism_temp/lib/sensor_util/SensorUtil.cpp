@@ -31,7 +31,7 @@ void sensor_read() {
     }
 
     float aht_h = aht.readHumidity(false);
-    if (absolute(h - aht_t) > DELTA_HUMI) {
+    if (absolute(h - aht_h) > DELTA_HUMI) {
         h = aht_h;
         Serial.printf("new humi %.0f\n", h);
         snprintf(h_buff, BUFFER_SIZE, "%.0f", h);
