@@ -2,7 +2,7 @@
 
 #pragma region vars
 
-NEOMETHOD strip(LED_COUNT, LED_PIN);  // PIN is ignored for ESP8266
+NEOMETHOD strip(LED_COUNT);  // PIN is ignored for ESP8266
 NeoAnimationFX<NEOMETHOD> led_strip(strip);
 Espalexa alexa;
 
@@ -54,11 +54,7 @@ void update_led() {
     // update lux
     if (current_status.lux != new_status.lux) {
         current_status.lux = new_status.lux;
-        // TODO to maybe avoid flikering, to be tested
-        if (current_status.lux > MAX_BRI)
-            led_strip.setBrightness(MAX_BRI);
-        else
-            led_strip.setBrightness(current_status.lux);
+        led_strip.setBrightness(current_status.lux);
     }
     // update speed
     if (current_status.speed != new_status.speed) {
@@ -75,7 +71,7 @@ void update_led() {
 }
 #pragma endregion
 
-#pragma region mqtt
+#pragma region network
 
 bool decodeJson(String message) {
     StaticJsonDocument<JSON_BUFFER_SIZE> doc;
@@ -142,8 +138,6 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     if (strcmp(topic, COMMAND_TOPIC) == 0) decodeJson(new_payload);
 }
 
-#pragma endregion  // mqtt
-
 void update_alexa(uint8_t bri) {
     Serial.printf("~ alexa bri: %d\n", bri);
     if (bri == 0)
@@ -155,6 +149,8 @@ void update_alexa(uint8_t bri) {
     update = true;
 }
 
+#pragma endregion  // network
+
 void setup() {
     // safe startup
     pinMode(BUILTIN_LED, OUTPUT);
@@ -162,14 +158,13 @@ void setup() {
     delay(1000);
     Serial.begin(19200);
     Serial.println();
-    Serial.printf("alexa name %s, hostname %s\n", ALEXA_NAME, HOSTNAME);
     // mqtt setup
     mqttSetup(CLIENT_ID, STATE_TOPIC);
     // wifi connect
     connectToWifi();
     // init ws2812fx
     led_strip.init();
-    led_strip.setColor(color);
+    led_strip.setColor(WHITE);
     // end of setup
     digitalWrite(BUILTIN_LED, HIGH);
 }

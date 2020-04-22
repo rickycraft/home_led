@@ -10,11 +10,13 @@ unsigned long last_update = millis();
 bool did_setup = false;
 
 void sensor_setup() {
-    Serial.println("Sensor setup");
+    Serial.print("Setting up sensor...");
     if (!aht.begin(SDA, SCL))
         Serial.println("failed begin of ATH10");
-    else
+    else {
         did_setup = true;
+        Serial.println("done");
+    }
 };
 
 void sensor_read() {
@@ -24,7 +26,7 @@ void sensor_read() {
     float aht_t = aht.readTemperature(false);
     if (absolute(t - aht_t) > DELTA_TEMP) {
         t = aht_t;
-        Serial.printf("new temp %.1f\n", t);
+        Serial.printf("~ temp %.1f°C\n", t);
         snprintf(t_buff, BUFFER_SIZE, "%.1f", t);
         mqttClient.publish(TEMP_TOPIC, 2, true, t_buff);
     }
@@ -32,7 +34,7 @@ void sensor_read() {
     float aht_h = aht.readHumidity(false);
     if (absolute(h - aht_h) > DELTA_HUMI) {
         h = aht_h;
-        Serial.printf("new humi %.0f\n", h);
+        Serial.printf("~ humi %.0f%c \n", h, '%');
         snprintf(h_buff, BUFFER_SIZE, "%.0f", h);
         mqttClient.publish(HUMIDITY_TOPIC, 2, true, h_buff);
     }
