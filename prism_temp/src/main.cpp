@@ -6,6 +6,7 @@
 
 NEOMETHOD strip(LED_COUNT, PIN);  // PIN is ignored for ESP8266
 NeoAnimationFX<NEOMETHOD> led_strip(strip);
+Espalexa alexa;
 
 String effect_name = "rainbow";  // current effect name
 uint8_t ha_speed = 128;          // current ha effect speed
@@ -114,13 +115,25 @@ void publish_state() {
     mqttClient.publish(STATE_TOPIC, 2, true, message);
 }
 
+void onWifiConnect(const WiFiEventStationModeGotIP& event) {
+    Serial.println("connected");
+    // init alexa
+    alexa.addDevice(ALEXA_NAME, update_alexa);
+    Serial.print("alexa begin: ");
+    Serial.println((alexa.begin()) ? "success" : "fail");
+    // setup ota
+    espOTA(HOSTNAME);
+    // connect to mqtt
+    connectToMqtt();
+}
+
 void onMqttConnect(bool sessionPresent) {
     Serial.println("connected");
-
+    // subscribe to mqtt topic
     uint16_t packetIdSub = mqttClient.subscribe(COMMAND_TOPIC, 2);
     Serial.print("Subscribe to: ");
     Serial.println(COMMAND_TOPIC);
-
+    // sensor setup
     sensor_setup();
 }
 
@@ -132,8 +145,9 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
 }
 
 #pragma endregion  // mqtt
-Espalexa alexa;
+
 void update_alexa(uint8_t bri) {
+    Serial.printf("alexa bri: %d\n", bri);
     if (bri == 0)
         new_status.state = false;
     else {
@@ -150,16 +164,14 @@ void setup() {
     delay(1000);
     Serial.begin(19200);
     Serial.println();
+    Serial.printf("alexa name %s, hostname %s\n", ALEXA_NAME, HOSTNAME);
     // mqtt setup
     mqttSetup(CLIENT_ID, STATE_TOPIC);
+    // wifi connect
+    connectToWifi();
     // init ws2812fx
     led_strip.init();
     led_strip.setColor(color);
-    // init alexa
-    alexa.addDevice(ALEXA_NAME, update_alexa);
-    alexa.begin();
-    // setup ota
-    espOTA(HOSTNAME);
     // end of setup
     digitalWrite(BUILTIN_LED, HIGH);
 }

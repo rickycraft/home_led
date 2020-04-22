@@ -12,11 +12,6 @@ void connectToWifi() {
     WiFi.begin(WIFI_SSID, WIFI_PASS);
 }
 
-void onWifiConnect(const WiFiEventStationModeGotIP& event) {
-    Serial.println("connected");
-    connectToMqtt();
-}
-
 void onWifiDisconnect(const WiFiEventStationModeDisconnected& event) {
     Serial.println("Disconnected from Wi-Fi.");
     mqttReconnectTimer.detach();  // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
@@ -59,6 +54,4 @@ void mqttSetup(const char* client_id, const char* will_topic) {
     mqttClient.setCredentials(MQTT_USER, MQTT_PASS);
     mqttClient.setServer(SERVER_IP, SERVER_PORT);
     mqttClient.setWill(will_topic, 0, true, WILL_PAYLOAD);
-
-    connectToWifi();
 }
