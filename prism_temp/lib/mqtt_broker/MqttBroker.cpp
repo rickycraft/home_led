@@ -26,17 +26,26 @@ void connectToMqtt() {
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
     Serial.print("Disconnected from MQTT, code: ");
     Serial.println((int8_t)reason);
-    if ((int8_t)reason == 0) ESP.reset();
+    // if ((int8_t)reason == 0) ESP.reset();
     if (WiFi.isConnected()) mqttReconnectTimer.once(2, connectToMqtt);
 }
 
-void onMqttSubscribe(uint16_t packetId, uint8_t qos) { Serial.println("sub ack"); }
+void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
+#ifdef ACK_LOG
+    Serial.println("sub ack");
+#endif
+}
 
-void onMqttUnsubscribe(uint16_t packetId) { Serial.println("unsub ack"); }
+void onMqttUnsubscribe(uint16_t packetId) {
+#ifdef ACK_LOG
+    Serial.println("unsub ack");
+#endif
+}
 
 void onMqttPublish(uint16_t packetId) {
-    //
-    // Serial.println("pub ack");
+#ifdef ACK_LOG
+    Serial.println("pub ack");
+#endif
 }
 
 void mqttSetup(const char* client_id, const char* will_topic) {

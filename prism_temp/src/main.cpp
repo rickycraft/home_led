@@ -2,15 +2,13 @@
 
 #pragma region vars
 
-#define PIN 2
-
-NEOMETHOD strip(LED_COUNT, PIN);  // PIN is ignored for ESP8266
+NEOMETHOD strip(LED_COUNT, LED_PIN);  // PIN is ignored for ESP8266
 NeoAnimationFX<NEOMETHOD> led_strip(strip);
 Espalexa alexa;
 
 String effect_name = "rainbow";  // current effect name
 uint8_t ha_speed = 128;          // current ha effect speed
-uint16_t color = WHITE;          // current effect speed
+uint16_t color = WHITE;          // current color
 
 // force state update
 bool update = false;
@@ -119,8 +117,8 @@ void onWifiConnect(const WiFiEventStationModeGotIP& event) {
     Serial.println("connected");
     // init alexa
     alexa.addDevice(ALEXA_NAME, update_alexa);
-    Serial.print("alexa begin: ");
-    Serial.println((alexa.begin()) ? "success" : "fail");
+    Serial.print("Alexa begin ");
+    Serial.println((alexa.begin()) ? "success" : "failed");
     // setup ota
     espOTA(HOSTNAME);
     // connect to mqtt
@@ -147,7 +145,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
 #pragma endregion  // mqtt
 
 void update_alexa(uint8_t bri) {
-    Serial.printf("alexa bri: %d\n", bri);
+    Serial.printf("~ alexa bri: %d\n", bri);
     if (bri == 0)
         new_status.state = false;
     else {

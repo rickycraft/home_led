@@ -9,6 +9,7 @@
 #define WILL_PAYLOAD "{\"state\": \"OFF\"}"
 #define LIGHT_ON "ON"
 #define LIGHT_OFF "OFF"
+// #define ACK_LOG
 
 extern AsyncMqttClient mqttClient;
 
