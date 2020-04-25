@@ -12,11 +12,6 @@ void connectToWifi() {
     WiFi.begin(WIFI_SSID, WIFI_PASS);
 }
 
-void onWifiConnect(const WiFiEventStationModeGotIP& event) {
-    Serial.println("connected");
-    connectToMqtt();
-}
-
 void onWifiDisconnect(const WiFiEventStationModeDisconnected& event) {
     Serial.println("Disconnected from Wi-Fi.");
     mqttReconnectTimer.detach();  // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
@@ -31,17 +26,26 @@ void connectToMqtt() {
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
     Serial.print("Disconnected from MQTT, code: ");
     Serial.println((int8_t)reason);
-    if ((int8_t)reason == 0) ESP.reset();
+    // if ((int8_t)reason == 0) ESP.reset();
     if (WiFi.isConnected()) mqttReconnectTimer.once(2, connectToMqtt);
 }
 
-void onMqttSubscribe(uint16_t packetId, uint8_t qos) { Serial.println("sub ack"); }
+void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
+#ifdef ACK_LOG
+    Serial.println("sub ack");
+#endif
+}
 
-void onMqttUnsubscribe(uint16_t packetId) { Serial.println("unsub ack"); }
+void onMqttUnsubscribe(uint16_t packetId) {
+#ifdef ACK_LOG
+    Serial.println("unsub ack");
+#endif
+}
 
 void onMqttPublish(uint16_t packetId) {
-    //
+#ifdef ACK_LOG
     Serial.println("pub ack");
+#endif
 }
 
 void mqttSetup(const char* client_id, const char* will_topic) {
@@ -59,6 +63,4 @@ void mqttSetup(const char* client_id, const char* will_topic) {
     mqttClient.setCredentials(MQTT_USER, MQTT_PASS);
     mqttClient.setServer(SERVER_IP, SERVER_PORT);
     mqttClient.setWill(will_topic, 0, true, WILL_PAYLOAD);
-
-    connectToWifi();
 }

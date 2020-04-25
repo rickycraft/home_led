@@ -2,17 +2,18 @@
 #include <ArduinoJson.h>
 #include <Espalexa.h>
 #include <MqttBroker.h>
+#include <NeoAnimationFX.h>
 #include <OtaUpdatates.h>
 #include <SensorUtil.h>
-#include <WS2812FX.h>
 
 // VARS
-#define LED_COUNT 53
-#define LED_PIN 0
+#define LED_COUNT 60
+#define LED_PIN 2
 // bigger is slower
 #define MAX_SPEED 2000
 #define MIN_SPEED 15000
 #define HA_SPEED 8576
+#define MAX_BRI 255
 #define ALEXA_NAME "prisma"
 #define HOSTNAME "prism"
 // json
@@ -21,11 +22,17 @@
 #define STATE_TOPIC "prism/state"
 #define COMMAND_TOPIC "prism/set"
 
-Espalexa alexa;
-WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+typedef struct LedStatus {
+    bool state;
+    int lux;
+    int effect_code;
+    int speed;
+};
+
+typedef NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod> NEOMETHOD;  // uses GPIO3/RX
 
 void update_alexa(uint8_t bri);
 bool decodeJson(String message);
 void publish_state();
-void set_effect();
+int get_effect_code();
 void update_led();
