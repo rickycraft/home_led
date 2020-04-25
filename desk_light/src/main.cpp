@@ -82,9 +82,10 @@ void update_alexa(uint8_t bri) {
 
 void setup() {
   // safe startup
+  pinMode(BUILTIN_LED, OUTPUT);
+  digitalWrite(BUILTIN_LED, LOW);
   delay(1000);
-  Serial.begin(115200);
-  // init the led
+  Serial.begin(115200);  // init the led
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
@@ -100,6 +101,8 @@ void setup() {
   // init alexa
   alexa.addDevice(ALEXA_NAME, update_alexa);
   alexa.begin();
+  // end setup
+  digitalWrite(BUILTIN_LED, HIGH);
 }
 
 void loop() {

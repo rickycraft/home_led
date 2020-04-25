@@ -27,10 +27,14 @@ void set_effect() {
   if (effect_name == "tricolor chase") effect = FX_MODE_TRICOLOR_CHASE;
 }
 
+#define MAX_BRI 240
 void update_led() {
   if (light_state) {
-    ws2812fx.setBrightness(lux);
-    ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, BLUE, speed, GAMMA);
+    if (lux > MAX_BRI)
+      ws2812fx.setBrightness(MAX_BRI);
+    else
+      ws2812fx.setBrightness(lux);
+    ws2812fx.setSegment(0, 0, LED_COUNT - 1, effect, WHITE, speed, GAMMA);
   } else {
     ws2812fx.setBrightness(0);
     ws2812fx.stop();
@@ -113,6 +117,8 @@ void update_alexa(uint8_t bri) {
 
 void setup() {
   // safe startup
+  pinMode(BUILTIN_LED, OUTPUT);
+  digitalWrite(BUILTIN_LED, LOW);
   delay(1000);
   Serial.begin(115200);
   Serial.printf("\nplatform.io version\n");
@@ -131,6 +137,7 @@ void setup() {
   alexa.addDevice(ALEXA_NAME, update_alexa);
   alexa.begin();
   // end of setup
+  digitalWrite(BUILTIN_LED, HIGH);
   Serial.println();
 }
 
