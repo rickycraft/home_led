@@ -1,0 +1,74 @@
+--- Available filters and text transformations: colorize, debug, default, direct, hexlify, log2file, nocontrol, printable, send_on_enter, time
+--- More details at http://bit.ly/pio-monitor-filters
+␒�!�Q¡n�B�ᡡ��%a��␅�aE!␕5���B��
+Connecting to Wi-Fi...connected
+Connecting to MQTT...connected
+Subscribe to: prism/set
+Sensor setup
+sub ack
+~ prism/set {"state": "ON"}, qos: 2
+reading new data
+new temp 22.8
+new humi 49
+reading new data
+reading new data
+reading new data
+reading new data
+reading new data
+␔�c�qC�a��%!!��sEq��S�!␕a�����D��
+Connecting to Wi-Fi...connected
+Connecting to MQTT...connected
+Subscribe to: prism/set
+Sensor setup
+sub ack
+~ prism/set {"state": "ON"}, qos: 2
+reading new data
+new temp 22.8
+new humi 48
+reading new data
+reading new data
+reading new data
+reading new data
+reading new data
+reading new data
+reading new data
+new humi 50
+reading new data
+reading new data
+new humi 49
+reading new data
+reading new data
+reading new data
+new temp 23.5
+new humi 47
+~ prism/set {"state": "ON", "brightness": 217}, qos: 2
+~ prism/set {"state": "ON", "brightness": 255}, qos: 2
+reading new data
+reading new data
+reading new data
+reading new data
+reading new data
+reading new data
+reading new data
+reading new data
+reading new data
+reading new data
+reading new data
+new temp 23.0
+new humi 45
+reading new data
+reading new data
+new temp 22.2
+reading new data
+new temp 23.2
+reading new data
+reading new data
+new temp 23.7
+reading new data
+reading new data
+~ prism/set {"state": "ON", "brightness": 166}, qos: 2
+~ prism/set {"state": "ON", "brightness": 255}, qos: 2
+Updating contrib-pysite                  @ 2.37.191017    [2.38.191017]
+Uninstalling contrib-pysite @ 2.37.191017: 	[OK]
+CorePackageManager: Installing contrib-pysite @ 2.38.191017
+contrib-pysite @ 2.38.191017 has been successfully installed!
