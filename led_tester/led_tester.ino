@@ -1,9 +1,12 @@
-#define LED_PIN 15
+#define LED_PIN 5
 int i = 0;
 
 void setup() {
     pinMode(BUILTIN_LED, OUTPUT);
     pinMode(LED_PIN, OUTPUT);
+    analogWriteRange(255);
+    // analogWriteFreq(20000);
+    analogWriteFreq(100);
 }
 
 void loop() {
@@ -14,9 +17,7 @@ void loop() {
         analogWrite(LED_PIN, i);
         delay(100);
     }
-    delay(2000);
-    digitalWrite(LED_PIN, HIGH);
-    delay(2000);
+    delay(1000);
     // power off
     digitalWrite(BUILTIN_LED, HIGH);
     while (i > 0) {
@@ -24,7 +25,5 @@ void loop() {
         analogWrite(LED_PIN, i);
         delay(100);
     }
-    delay(2000);
-    digitalWrite(LED_PIN, LOW);
-    delay(2000);
+    delay(1000);
 }
