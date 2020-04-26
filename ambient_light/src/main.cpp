@@ -18,6 +18,7 @@ bool decodeJson(String message) {
     StaticJsonDocument<JSON_BUFFER_SIZE> doc;
     DeserializationError error = deserializeJson(doc, message);
     if (error) return false;
+    Serial.println(message);
     // state topic
     if (doc.containsKey("state"))
         light_state = (strcmp(doc["state"], LIGHT_ON) == 0) ? true : false;
@@ -47,10 +48,7 @@ void publish_state() {
 #pragma region light
 void update_led() {
     if (light_state) {
-        if (lux == 255)
-            digitalWrite(LED_PIN, HIGH);
-        else
-            analogWrite(LED_PIN, lux);
+        analogWrite(LED_PIN, lux);
     } else
         digitalWrite(LED_PIN, LOW);
     publish_state();

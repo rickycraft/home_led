@@ -1,5 +1,4 @@
 #include <Arduino.h>
-
 #include <ArduinoJson.h>
 #include <Espalexa.h>
 #include <MqttUtil.h>
@@ -9,7 +8,7 @@
 // vars
 #define BUFFER_SIZE 5
 #define FADE_DELAY 5
-#define LED_PIN 15
+#define LED_PIN 5
 #define JSON_BUFFER_SIZE JSON_OBJECT_SIZE(5)
 // name
 #define ALEXA_NAME "ambiente"
