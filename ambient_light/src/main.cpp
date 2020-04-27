@@ -80,6 +80,8 @@ void setup() {
     digitalWrite(BUILTIN_LED, LOW);
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, LOW);
+    analogWriteRange(255);
+    analogWriteFreq(120);
     delay(1000);
     Serial.begin(19200);
     Serial.println();
