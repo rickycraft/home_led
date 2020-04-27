@@ -1,10 +1,8 @@
 #include <Arduino.h>
-
 #include <ArduinoJson.h>
 #include <Espalexa.h>
-#include <MqttUtil.h>
-#include <Util.h>
-#include <WiFiUtil.h>
+#include <MqttBroker.h>
+#include <OtaUpdatates.h>
 
 // pin
 #define LED_PIN 12
@@ -21,13 +19,9 @@
 #define STATE_TOPIC "desk/state"
 #define COMMAND_TOPIC "desk/set"
 
-WiFiUtil wifi;
-MqttUtil mqtt;
 Espalexa alexa;
 
-void check_button();
-void off();
-void publish_state();
-void update_led();
 void update_alexa(uint8_t bri);
 bool decodeJson(String message);
+void publish_state();
+void update_led();
