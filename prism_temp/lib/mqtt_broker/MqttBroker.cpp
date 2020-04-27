@@ -49,10 +49,10 @@ void onMqttPublish(uint16_t packetId) {
 }
 
 void mqttSetup(const char* client_id, const char* will_topic) {
-    wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
+    wifiConnectHandler = WiFi.onStationModeGotIP(_onWifiConnect);
     wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
 
-    mqttClient.onConnect(onMqttConnect);
+    mqttClient.onConnect(_onMqttConnect);
     mqttClient.onDisconnect(onMqttDisconnect);
     mqttClient.onSubscribe(onMqttSubscribe);
     mqttClient.onUnsubscribe(onMqttUnsubscribe);
@@ -63,4 +63,30 @@ void mqttSetup(const char* client_id, const char* will_topic) {
     mqttClient.setCredentials(MQTT_USER, MQTT_PASS);
     mqttClient.setServer(SERVER_IP, SERVER_PORT);
     mqttClient.setWill(will_topic, 0, true, WILL_PAYLOAD);
+}
+
+void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties,
+                   size_t len, size_t index, size_t total) {
+    String new_payload = String(payload).substring(0, len);
+    Serial.printf("~ %s %s, qos: %d\n", topic, new_payload.c_str(), properties.qos);
+    if (strcmp(topic, COMMAND_TOPIC) == 0)
+        if (!decodeJson(new_payload)) Serial.println("failed to decode json");
+}
+
+void _onWifiConnect(const WiFiEventStationModeGotIP& event) {
+    Serial.println("connected");
+    // call func
+    onWifiConnect();
+    // connect to mqtt
+    connectToMqtt();
+}
+
+void _onMqttConnect(bool sessionPresent) {
+    Serial.println("connected");
+    // subscribe to mqtt topic
+    uint16_t packetIdSub = mqttClient.subscribe(COMMAND_TOPIC, 2);
+    Serial.print("Subscribe to: ");
+    Serial.println(COMMAND_TOPIC);
+    // call func
+    onMqttConnect();
 }

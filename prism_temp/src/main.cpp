@@ -109,33 +109,18 @@ void publish_state() {
     mqttClient.publish(STATE_TOPIC, 2, true, message);
 }
 
-void onWifiConnect(const WiFiEventStationModeGotIP& event) {
-    Serial.println("connected");
+void onWifiConnect() {
     // init alexa
     alexa.addDevice(ALEXA_NAME, update_alexa);
     Serial.print("Alexa begin ");
     Serial.println((alexa.begin()) ? "success" : "failed");
     // setup ota
     espOTA(HOSTNAME);
-    // connect to mqtt
-    connectToMqtt();
 }
 
-void onMqttConnect(bool sessionPresent) {
-    Serial.println("connected");
-    // subscribe to mqtt topic
-    uint16_t packetIdSub = mqttClient.subscribe(COMMAND_TOPIC, 2);
-    Serial.print("Subscribe to: ");
-    Serial.println(COMMAND_TOPIC);
-    // sensor setup
+void onMqttConnect() {
+    // setup sensor
     sensor_setup();
-}
-
-void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties,
-                   size_t len, size_t index, size_t total) {
-    String new_payload = String(payload).substring(0, len);
-    Serial.printf("~ %s %s, qos: %d\n", topic, new_payload.c_str(), properties.qos);
-    if (strcmp(topic, COMMAND_TOPIC) == 0) decodeJson(new_payload);
 }
 
 void update_alexa(uint8_t bri) {
