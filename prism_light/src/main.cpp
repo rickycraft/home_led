@@ -121,6 +121,7 @@ void onWifiConnect() {
 void onMqttConnect() {
     // setup sensor
     sensor_setup();
+    digitalWrite(BUILTIN_LED, HIGH);
 }
 
 void update_alexa(uint8_t bri) {
@@ -150,8 +151,6 @@ void setup() {
     // init ws2812fx
     led_strip.init();
     led_strip.setColor(WHITE);
-    // end of setup
-    digitalWrite(BUILTIN_LED, HIGH);
 }
 
 void loop() {
