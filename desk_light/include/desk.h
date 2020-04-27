@@ -17,11 +17,10 @@
 // mqtt
 #define CLIENT_ID "desk_light"
 #define STATE_TOPIC "desk/state"
-#define COMMAND_TOPIC "desk/set"
+char* COMMAND_TOPIC = "desk/set";
 
 Espalexa alexa;
 
 void update_alexa(uint8_t bri);
-bool decodeJson(String message);
 void publish_state();
 void update_led();
