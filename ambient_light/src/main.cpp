@@ -13,6 +13,8 @@ bool decodeJson(String message) {
     if (doc.containsKey("state"))
         light_state = (strcmp(doc["state"], LIGHT_ON) == 0) ? true : false;
     if (doc.containsKey("brightness")) lux = doc["brightness"].as<int>();
+    // update led
+    update_led();
     return true;
 }
 
@@ -28,34 +30,16 @@ void publish_state() {
     mqttClient.publish(STATE_TOPIC, 2, true, message);
 }
 
-void onWifiConnect(const WiFiEventStationModeGotIP& event) {
-    Serial.println("connected");
+void onWifiConnect() {
     // init alexa
     alexa.addDevice(ALEXA_NAME, update_alexa);
     Serial.print("Alexa begin ");
     Serial.println((alexa.begin()) ? "success" : "failed");
     // setup ota
     espOTA(HOSTNAME);
-    // connect to mqtt
-    connectToMqtt();
 }
-
-void onMqttConnect(bool sessionPresent) {
-    Serial.println("connected");
-    // subscribe to mqtt topic
-    uint16_t packetIdSub = mqttClient.subscribe(COMMAND_TOPIC, 2);
-    Serial.print("Subscribe to: ");
-    Serial.println(COMMAND_TOPIC);
-}
-
-void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties,
-                   size_t len, size_t index, size_t total) {
-    String new_payload = String(payload).substring(0, len);
-    Serial.printf("~ %s %s, qos: %d\n", topic, new_payload.c_str(), properties.qos);
-    if (strcmp(topic, COMMAND_TOPIC) == 0) {
-        if (decodeJson(new_payload)) update_led();
-    }
-}
+// nothing to do on mqtt connect
+void onMqttConnect() { digitalWrite(BUILTIN_LED, HIGH); };
 
 #pragma endregion  // networking
 
@@ -89,8 +73,6 @@ void setup() {
     mqttSetup(CLIENT_ID, STATE_TOPIC);
     // wifi connect
     connectToWifi();
-    // end of setup
-    digitalWrite(BUILTIN_LED, HIGH);
 }
 
 void loop() {
