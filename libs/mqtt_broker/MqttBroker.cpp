@@ -56,7 +56,7 @@ void mqttSetup(const char* client_id, const char* will_topic) {
     mqttClient.onDisconnect(onMqttDisconnect);
     mqttClient.onSubscribe(onMqttSubscribe);
     mqttClient.onUnsubscribe(onMqttUnsubscribe);
-    mqttClient.onMessage(onMqttMessage);
+    mqttClient.onMessage(_onMqttMessage);
     mqttClient.onPublish(onMqttPublish);
 
     mqttClient.setClientId(client_id);
@@ -65,12 +65,14 @@ void mqttSetup(const char* client_id, const char* will_topic) {
     mqttClient.setWill(will_topic, 0, true, WILL_PAYLOAD);
 }
 
-void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties,
-                   size_t len, size_t index, size_t total) {
+void _onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties,
+                    size_t len, size_t index, size_t total) {
     String new_payload = String(payload).substring(0, len);
     Serial.printf("~ %s %s, qos: %d\n", topic, new_payload.c_str(), properties.qos);
-    if (strcmp(topic, COMMAND_TOPIC) == 0)
+    if (strcmp(topic, COMMAND_TOPIC) == 0) {
         if (!decodeJson(new_payload)) Serial.println("failed to decode json");
+    } else
+        onMqttMessage(topic, new_payload);
 }
 
 void _onWifiConnect(const WiFiEventStationModeGotIP& event) {

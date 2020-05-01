@@ -1,6 +1,8 @@
 #include <ambient.h>
 
 boolean light_state = false;
+boolean is_morning = false;
+unsigned long last_update = 0;
 uint8_t lux = 100;  // setted lux
 
 #pragma region networking
@@ -14,6 +16,7 @@ bool decodeJson(String message) {
         light_state = (strcmp(doc["state"], LIGHT_ON) == 0) ? true : false;
     if (doc.containsKey("brightness")) lux = doc["brightness"].as<int>();
     // update led
+    set_morning(false);
     update_led();
     return true;
 }
@@ -38,8 +41,22 @@ void onWifiConnect() {
     // setup ota
     espOTA(HOSTNAME);
 }
-// nothing to do on mqtt connect
-void onMqttConnect() { digitalWrite(BUILTIN_LED, HIGH); };
+
+void onMqttConnect() {
+    mqttClient.subscribe(MORNING_COMMAND_TOPIC, 2);
+    digitalWrite(BUILTIN_LED, HIGH);
+};
+
+void onMqttMessage(char *topic, String payload) {
+    if (strcmp(topic, MORNING_COMMAND_TOPIC) == 0) {
+        if (payload == "ON" && !light_state) {
+            set_morning(true);
+            lux = 0;
+            light_state = true;
+        } else
+            set_morning(false);
+    };
+}
 
 #pragma endregion  // networking
 
@@ -51,6 +68,22 @@ void update_alexa(uint8_t bri) {
         lux = bri;
         light_state = true;
     }
+}
+
+void morning() {
+    if (millis() - last_update > MORNING_DELAY) {
+        last_update = millis();
+        if (lux < 255) {
+            lux++;
+            update_led();
+        } else
+            set_morning(false);
+    }
+}
+
+void set_morning(bool state) {
+    is_morning = state;
+    mqttClient.publish(MORNING_STATE_TOPIC, 2, true, (state) ? LIGHT_OFF : LIGHT_OFF);
 }
 
 void update_led() {
@@ -76,6 +109,7 @@ void setup() {
 }
 
 void loop() {
+    if (is_morning) morning();
     ArduinoOTA.handle();
     alexa.loop();
 }
