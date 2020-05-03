@@ -68,6 +68,7 @@ void update_alexa(uint8_t bri) {
         lux = bri;
         light_state = true;
     }
+    update_led();
 }
 
 void morning() {
@@ -98,7 +99,7 @@ void setup() {
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, LOW);
     analogWriteRange(255);
-    analogWriteFreq(120);
+    analogWriteFreq(18000);
     delay(1000);
     Serial.begin(19200);
     Serial.println();
