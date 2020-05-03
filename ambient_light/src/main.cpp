@@ -16,7 +16,7 @@ bool decodeJson(String message) {
         light_state = (strcmp(doc["state"], LIGHT_ON) == 0) ? true : false;
     if (doc.containsKey("brightness")) lux = doc["brightness"].as<int>();
     // update led
-    set_morning(false);
+    if (is_morning) set_morning(false);
     update_led();
     return true;
 }
@@ -83,7 +83,7 @@ void morning() {
 
 void set_morning(bool state) {
     is_morning = state;
-    mqttClient.publish(MORNING_STATE_TOPIC, 2, true, (state) ? LIGHT_OFF : LIGHT_OFF);
+    mqttClient.publish(MORNING_STATE_TOPIC, 2, false, (state) ? LIGHT_ON : LIGHT_OFF);
 }
 
 void update_led() {
