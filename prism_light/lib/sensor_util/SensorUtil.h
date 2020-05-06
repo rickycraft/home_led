@@ -3,7 +3,7 @@
 
 #define READ_TIMEOUT 600000
 
-#define DELTA_TEMP 0.45
+#define DELTA_TEMP 0.30
 #define DELTA_HUMI 1.50
 
 #define BUFFER_SIZE 5
