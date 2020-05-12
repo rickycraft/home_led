@@ -88,7 +88,14 @@ void set_morning(bool state) {
 }
 
 void update_led() {
-    analogWrite(LED_PIN, (light_state) ? lux : 0);
+    if (light_state) {
+        if (lux > 250)
+            digitalWrite(LED_PIN, HIGH);
+        else
+            analogWrite(LED_PIN, lux);
+    } else
+        digitalWrite(LED_PIN, LOW);
+
     publish_state();
 }
 
