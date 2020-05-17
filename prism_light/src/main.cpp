@@ -124,6 +124,8 @@ void onMqttConnect() {
     digitalWrite(BUILTIN_LED, HIGH);
 }
 
+void onMqttMessage(char*, String){};
+
 void update_alexa(uint8_t bri) {
     Serial.printf("~ alexa bri: %d\n", bri);
     if (bri == 0)
