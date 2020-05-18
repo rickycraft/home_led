@@ -37,6 +37,7 @@ void sensor_read() {
         Serial.printf("DEBUG: old temp %.1f°C, new temp %.1f°C, %s\n", t, aht_t,
                       (is_rising) ? "rising" : "dropping");
 #endif
+        // check if is rising now and is rising last check or the opposite
         if ((aht_t - t > 0 && is_rising) || (aht_t - t < 0 && !is_rising)) {
             snprintf(t_buff, BUFFER_SIZE, "%.1f", aht_t);
 #ifdef SENSOR_DEBUG
@@ -44,6 +45,7 @@ void sensor_read() {
 #endif
             mqttClient.publish(TEMP_TOPIC, 2, true, t_buff);
         }
+        // update rising last check
         is_rising = (aht_t - t > 0);
         t = aht_t;
     }
