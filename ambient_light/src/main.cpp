@@ -4,6 +4,7 @@ boolean light_state = false;
 boolean is_morning = false;
 unsigned long last_update = 0;
 uint8_t lux = 100;  // setted lux
+Espalexa alexa;
 
 #pragma region networking
 

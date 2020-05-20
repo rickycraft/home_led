@@ -19,8 +19,6 @@
 #define STATE_TOPIC "led/state"
 char* COMMAND_TOPIC = "led/set";
 
-Espalexa alexa;
-
 void update_alexa(uint8_t bri);
 void publish_state();
 void update_led();
