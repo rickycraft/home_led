@@ -19,8 +19,6 @@
 #define STATE_TOPIC "desk/state"
 char* COMMAND_TOPIC = "desk/set";
 
-Espalexa alexa;
-
 void update_alexa(uint8_t bri);
 void publish_state();
 void update_led();

@@ -4,6 +4,7 @@ boolean light_state = false;
 uint8_t lux = 100;
 uint8_t _lux = lux;
 uint8_t buttonStatus;
+Espalexa alexa;
 
 void update_led() {
     publish_state();
