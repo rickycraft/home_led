@@ -4,14 +4,16 @@ Adafruit_AHT10 aht;
 
 // last sensor state
 float t = 0, h = 0;
+bool is_rising = true;
 // buffers
 char t_buff[BUFFER_SIZE], h_buff[BUFFER_SIZE];
 unsigned long last_update;
 bool did_setup = false;
 
 void sensor_setup() {
-#ifdef SENSOR_DEBUG_TIME
+#ifdef SENSOR_DEBUG
     last_update = READ_TIMEOUT;
+    Serial.println("DEBUG: sensor in debug mode");
 #else
     last_update = millis();
 #endif
@@ -31,17 +33,30 @@ void sensor_read() {
 
     float aht_t = temp.temperature;
     if (absolute(t - aht_t) > DELTA_TEMP) {
+#ifdef SENSOR_DEBUG
+        Serial.printf("DEBUG: old temp %.1f°C, new temp %.1f°C, %s\n", t, aht_t,
+                      (is_rising) ? "rising" : "dropping");
+#endif
+        // check if is rising now and is rising last check or the opposite
+        if ((aht_t - t > 0 && is_rising) || (aht_t - t < 0 && !is_rising)) {
+            snprintf(t_buff, BUFFER_SIZE, "%.1f", aht_t);
+#ifdef SENSOR_DEBUG
+            Serial.printf("~ temp %s°C\n", t_buff);
+#endif
+            mqttClient.publish(TEMP_TOPIC, 2, true, t_buff);
+        }
+        // update rising last check
+        is_rising = (aht_t - t > 0);
         t = aht_t;
-        Serial.printf("~ temp %.1f°C\n", t);
-        snprintf(t_buff, BUFFER_SIZE, "%.1f", t);
-        mqttClient.publish(TEMP_TOPIC, 2, true, t_buff);
     }
 
     float aht_h = humidity.relative_humidity;
     if (absolute(h - aht_h) > DELTA_HUMI) {
         h = aht_h;
-        Serial.printf("~ humi %.0f%c \n", h, '%');
         snprintf(h_buff, BUFFER_SIZE, "%.0f", h);
+#ifdef SENSOR_DEBUG
+        Serial.printf("~ humi %s%c \n", h_buff, '%');
+#endif
         mqttClient.publish(HUMIDITY_TOPIC, 2, true, h_buff);
     }
 
