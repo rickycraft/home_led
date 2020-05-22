@@ -15,15 +15,15 @@ void sensor_setup() {
     last_update = READ_TIMEOUT;
     Serial.println("DEBUG: sensor in debug mode");
 #else
-    last_update = millis();
+    last_update = READ_TIMEOUT;
 #endif
     Serial.print("Setting up sensor...");
-    if (!aht.begin())
-        Serial.println("failed begin of ATH10");
-    else {
-        did_setup = true;
-        Serial.println("done");
+    while (!aht.begin()) {
+        Serial.println(".");
+        delay(500);
     }
+    did_setup = true;
+    Serial.println("done");
 };
 
 void sensor_read() {

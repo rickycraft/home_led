@@ -1,7 +1,7 @@
 #include <Adafruit_AHT10.h>
 #include <MqttBroker.h>
 
-#define DELTA_TEMP 0.25
+#define DELTA_TEMP 0.10
 #define DELTA_HUMI 2.00
 
 #define BUFFER_SIZE 5
