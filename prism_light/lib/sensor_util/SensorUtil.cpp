@@ -4,7 +4,6 @@ Adafruit_AHT10 aht;
 
 // last sensor state
 float t = 0, h = 0;
-bool is_rising = true;
 // buffers
 char t_buff[BUFFER_SIZE], h_buff[BUFFER_SIZE];
 unsigned long last_update;
@@ -38,15 +37,11 @@ void sensor_read() {
                       (is_rising) ? "rising" : "dropping");
 #endif
         // check if is rising now and is rising last check or the opposite
-        if ((aht_t - t > 0 && is_rising) || (aht_t - t < 0 && !is_rising)) {
-            snprintf(t_buff, BUFFER_SIZE, "%.1f", aht_t);
+        snprintf(t_buff, BUFFER_SIZE, "%.1f", aht_t);
 #ifdef SENSOR_DEBUG
-            Serial.printf("~ temp %s°C\n", t_buff);
+        Serial.printf("~ temp %s°C\n", t_buff);
 #endif
-            mqttClient.publish(TEMP_TOPIC, 2, true, t_buff);
-        }
-        // update rising last check
-        is_rising = (aht_t - t > 0);
+        mqttClient.publish(TEMP_TOPIC, 2, true, t_buff);
         t = aht_t;
     }
 

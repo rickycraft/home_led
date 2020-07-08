@@ -1,7 +1,7 @@
 #include <Adafruit_AHT10.h>
 #include <MqttBroker.h>
 
-#define DELTA_TEMP 0.15
+#define DELTA_TEMP 0.18
 #define DELTA_HUMI 2.00
 
 #define BUFFER_SIZE 5
@@ -10,7 +10,7 @@
 #ifdef SENSOR_DEBUG
 #define READ_TIMEOUT 6000
 #else
-#define READ_TIMEOUT 300000
+#define READ_TIMEOUT 600000
 #endif
 
 // mqtt topic
