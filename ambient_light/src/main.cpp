@@ -45,6 +45,7 @@ void onWifiConnect() {
 
 void onMqttConnect() {
     mqttClient.subscribe(MORNING_COMMAND_TOPIC, 2);
+    set_morning(false);
     digitalWrite(BUILTIN_LED, HIGH);
 };
 
