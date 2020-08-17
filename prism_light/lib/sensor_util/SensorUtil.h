@@ -7,10 +7,13 @@
 #define BUFFER_SIZE 5
 // #define SENSOR_DEBUG
 
+#define SECOND 1000
+#define MINUTE 60 * SECOND
+
 #ifdef SENSOR_DEBUG
-#define READ_TIMEOUT 6000
+#define READ_TIMEOUT 5 * SECOND
 #else
-#define READ_TIMEOUT 600000
+#define READ_TIMEOUT 5 * MINUTE
 #endif
 
 // mqtt topic

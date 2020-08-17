@@ -26,7 +26,7 @@ void sensor_setup() {
 };
 
 void sensor_read() {
-    if ((millis() - last_update) < READ_TIMEOUT || !did_setup) return;
+    if ((millis() - last_update) < (READ_TIMEOUT) || !did_setup) return;
     sensors_event_t humidity, temp;
     aht.getEvent(&humidity, &temp);  // populate temp and humidity objects with fresh data
 
