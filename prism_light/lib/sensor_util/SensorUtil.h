@@ -1,4 +1,4 @@
-#include <Adafruit_AHT10.h>
+#include <Adafruit_AHTX0.h>
 #include <MqttBroker.h>
 
 #define DELTA_TEMP 0.18

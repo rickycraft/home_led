@@ -1,6 +1,6 @@
 #include <SensorUtil.h>
 
-Adafruit_AHT10 aht;
+Adafruit_AHTX0 aht;
 
 // last sensor state
 float t = 0, h = 0;
