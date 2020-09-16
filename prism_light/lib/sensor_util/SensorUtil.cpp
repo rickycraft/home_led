@@ -31,7 +31,7 @@ void sensor_read() {
     aht.getEvent(&humidity, &temp);  // populate temp and humidity objects with fresh data
 
     float aht_t = temp.temperature;
-    if (absolute(t - aht_t) > DELTA_TEMP) {
+    if (absolute(t - aht_t) > DELTA_TEMP && aht_t < 40) {
 #ifdef SENSOR_DEBUG
         Serial.printf("DEBUG: old temp %.1f°C, new temp %.1f°C, %s\n", t, aht_t,
                       (is_rising) ? "rising" : "dropping");
